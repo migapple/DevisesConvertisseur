@@ -1,13 +1,11 @@
-
+# Devises Convertisseur
 
 For any questions or issues, please contact: michel.garlandat@icloud.com
 
-How to play
-
-select the Quiz
-
 Privacy Policy
 
-This app does not collect any personal data.
+This app does not collect, store or share any personal data.
+Exchange rates are fetched from open.er-api.com (no account required).
+No analytics, no tracking, no advertising.
 
 © Michel Garlandat
