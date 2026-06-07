@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Change Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0e0b07;
+  --gold: #c9a84c;
+  --gold2: #e8c97a;
+  --cream: #f5f0e8;
+  --parchment: #ede6d6;
+  --muted: #7a6e5f;
+  --bg: #0e0b07;
+  --surface: #1a1510;
+  --surface2: #231e17;
+  --border: rgba(201,168,76,0.25);
+  --fs: 1;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+#app{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;font-family:'Cormorant Garamond',Georgia,serif}
+
+/* HEADER */
+.header{
+  padding-top:calc(14px + env(safe-area-inset-top));
+  padding-bottom:12px;
+  padding-left:20px;
+  padding-right:20px;
+  background:var(--bg);
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:0.5px solid var(--border);
+}
+.header-title{
+  font-family:'IM Fell English',Georgia,serif;
+  font-size:calc(22px * var(--fs));
+  color:var(--gold);
+  letter-spacing:0.03em;
+  font-weight:400;
+}
+.header-btn{
+  background:none;border:none;cursor:pointer;
+  font-size:calc(22px * var(--fs));
+  color:var(--gold);
+  padding:4px 8px;
+  font-family:'Cormorant Garamond',serif;
+}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;padding-bottom:calc(20px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+
+/* RATE BAR */
+.rate-bar{
+  margin:16px 20px 0;
+  padding:10px 14px;
+  background:var(--surface);
+  border:0.5px solid var(--border);
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.rate-label{font-size:calc(11px * var(--fs));color:var(--muted);font-style:italic;letter-spacing:0.04em}
+.rate-value{font-size:calc(13px * var(--fs));color:var(--gold2);font-weight:300;letter-spacing:0.02em}
+.rate-dot{width:7px;height:7px;border-radius:50%;background:#5a9e6f;flex-shrink:0;margin-left:8px}
+.rate-dot.loading{background:var(--gold);animation:pulse 1s infinite}
+.rate-dot.error{background:#9e5a5a}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* CONVERTER BLOCK */
+.converter{margin:20px 20px 0}
+
+.currency-block{
+  background:var(--surface);
+  border:0.5px solid var(--border);
+  border-radius:10px;
+  padding:16px 18px;
+  position:relative;
+}
+.currency-block + .currency-block{margin-top:2px;border-top-left-radius:4px;border-top-right-radius:4px}
+.currency-block:first-child{border-bottom-left-radius:4px;border-bottom-right-radius:4px}
+
+.cb-row{display:flex;align-items:center;gap:12px}
+.currency-picker{
+  background:var(--surface2);
+  border:0.5px solid var(--border);
+  border-radius:6px;
+  padding:8px 10px;
+  color:var(--gold);
+  font-family:'Cormorant Garamond',serif;
+  font-size:calc(15px * var(--fs));
+  font-weight:600;
+  min-width:80px;
+  -webkit-appearance:none;
+  appearance:none;
+  cursor:pointer;
+  letter-spacing:0.05em;
+}
+.currency-picker:focus{outline:none;border-color:var(--gold)}
+.amount-input{
+  flex:1;
+  background:transparent;
+  border:none;
+  outline:none;
+  color:var(--cream);
+  font-family:'Cormorant Garamond',serif;
+  font-size:calc(34px * var(--fs));
+  font-weight:300;
+  text-align:right;
+  letter-spacing:0.01em;
+  caret-color:var(--gold);
+}
+.amount-input::placeholder{color:rgba(245,240,232,0.2)}
+.amount-input:read-only{color:var(--gold2)}
+.cb-name{font-size:calc(11px * var(--fs));color:var(--muted);font-style:italic;margin-top:4px;letter-spacing:0.03em}
+
+/* SWAP BTN */
+.swap-wrap{display:flex;justify-content:center;margin:0;position:relative;z-index:2}
+.swap-btn{
+  background:var(--surface2);
+  border:0.5px solid var(--border);
+  border-radius:50%;
+  width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  color:var(--gold);
+  font-size:16px;
+  transition:transform 0.3s;
+  margin:-2px 0;
+}
+.swap-btn:active{transform:rotate(180deg)}
+
+/* QUICK AMOUNTS */
+.quick-section{margin:20px 20px 0}
+.quick-label{font-size:calc(11px * var(--fs));color:var(--muted);font-style:italic;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px}
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.quick-btn{
+  background:var(--surface);
+  border:0.5px solid var(--border);
+  border-radius:8px;
+  padding:10px 4px;
+  color:var(--gold2);
+  font-family:'Cormorant Garamond',serif;
+  font-size:calc(15px * var(--fs));
+  font-weight:300;
+  cursor:pointer;
+  text-align:center;
+  letter-spacing:0.02em;
+  transition:background 0.15s;
+}
+.quick-btn:active{background:var(--surface2)}
+
+/* HISTORY */
+.history-section{margin:24px 20px 0}
+.section-title{
+  font-family:'IM Fell English',Georgia,serif;
+  font-size:calc(14px * var(--fs));
+  color:var(--gold);
+  letter-spacing:0.06em;
+  margin-bottom:12px;
+  font-style:italic;
+}
+.history-item{
+  background:var(--surface);
+  border:0.5px solid var(--border);
+  border-radius:8px;
+  padding:12px 14px;
+  margin-bottom:6px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.hi-from{font-size:calc(14px * var(--fs));color:var(--cream);font-weight:300}
+.hi-arrow{color:var(--muted);margin:0 8px;font-size:12px}
+.hi-to{font-size:calc(14px * var(--fs));color:var(--gold2);font-weight:300}
+.hi-rate{font-size:calc(11px * var(--fs));color:var(--muted);font-style:italic}
+.hi-clear{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px}
+
+/* SETTINGS OVERLAY */
+.overlay{
+  display:none;
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(10,8,4,0.92);
+  z-index:100;
+  flex-direction:column;
+}
+.overlay.open{display:flex}
+.overlay-header{
+  padding-top:calc(14px + env(safe-area-inset-top));
+  padding-bottom:12px;
+  padding-left:20px;
+  padding-right:20px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:0.5px solid var(--border);
+  flex-shrink:0;
+}
+.overlay-title{font-family:'IM Fell English',serif;font-size:calc(20px * var(--fs));color:var(--gold)}
+.close-btn{background:none;border:none;color:var(--gold);font-size:24px;cursor:pointer;padding:4px 8px}
+.overlay-body{flex:1;overflow-y:auto;padding:20px 20px calc(20px + env(safe-area-inset-bottom))}
+
+/* settings content */
+.settings-section{margin-bottom:24px}
+.settings-label{font-size:calc(11px * var(--fs));color:var(--muted);font-style:italic;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px}
+.font-row{display:flex;gap:10px;align-items:center}
+.font-btn{
+  background:var(--surface);border:0.5px solid var(--border);
+  border-radius:6px;padding:8px 16px;
+  color:var(--gold2);font-family:'Cormorant Garamond',serif;
+  font-size:calc(16px * var(--fs));cursor:pointer;
+}
+.font-btn:active{background:var(--surface2)}
+.font-preview{color:var(--cream);font-size:calc(14px * var(--fs));font-style:italic}
+
+/* apps mosaic */
+.apps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.app-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+.app-icon{width:56px;height:56px;border-radius:13px;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.app-icon img{width:100%;height:100%;object-fit:cover;border-radius:13px}
+.app-name{font-size:9px;color:var(--muted);text-align:center;font-family:'Cormorant Garamond',serif;line-height:1.2;max-width:60px}
+.appstore-badge{display:block;margin:16px auto 0;height:36px}
+
+/* ornament */
+.ornament{text-align:center;color:var(--border);font-size:18px;margin:8px 0;letter-spacing:4px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-title">Change Calculator</div>
+    <button class="header-btn" onclick="openSettings()" aria-label="Applications">📱</button>
+  </div>
+
+  <div class="main">
+    <div class="rate-bar">
+      <span class="rate-label" id="rateLabel">Chargement des taux…</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="rate-value" id="rateValue"></span>
+        <span class="rate-dot loading" id="rateDot"></span>
+      </div>
+    </div>
+
+    <div class="converter">
+      <div class="currency-block" id="blockFrom">
+        <div class="cb-row">
+          <select class="currency-picker" id="selFrom" onchange="onCurrencyChange()"></select>
+          <input class="amount-input" type="number" id="inputFrom" inputmode="decimal" placeholder="0" oninput="convertFrom()">
+        </div>
+        <div class="cb-name" id="nameFrom"></div>
+      </div>
+
+      <div class="swap-wrap">
+        <button class="swap-btn" onclick="swapCurrencies()" aria-label="Inverser">⇅</button>
+      </div>
+
+      <div class="currency-block" id="blockTo">
+        <div class="cb-row">
+          <select class="currency-picker" id="selTo" onchange="onCurrencyChange()"></select>
+          <input class="amount-input" type="number" id="inputTo" inputmode="decimal" placeholder="0" readonly>
+        </div>
+        <div class="cb-name" id="nameTo"></div>
+      </div>
+    </div>
+
+    <div class="quick-section">
+      <div class="quick-label">Montants rapides</div>
+      <div class="quick-grid" id="quickGrid"></div>
+    </div>
+
+    <div class="history-section" id="historySection" style="display:none">
+      <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>Historique</span>
+        <button class="hi-clear" onclick="clearHistory()" aria-label="Effacer">✕</button>
+      </div>
+      <div id="historyList"></div>
+    </div>
+
+    <div class="ornament">✦ ✦ ✦</div>
+  </div>
+</div>
+
+<!-- SETTINGS OVERLAY -->
+<div class="overlay" id="settingsOverlay">
+  <div class="overlay-header">
+    <div class="overlay-title">Réglages</div>
+    <button class="close-btn" onclick="closeSettings()">✕</button>
+  </div>
+  <div class="overlay-body">
+    <div class="settings-section">
+      <div class="settings-label">Taille du texte</div>
+      <div class="font-row">
+        <button class="font-btn" onclick="changeFS(-0.1)">A−</button>
+        <button class="font-btn" onclick="changeFS(0.1)">A+</button>
+        <span class="font-preview" id="fsPreview">100%</span>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-label">Nos applications</div>
+      <div class="apps-grid" id="appsGrid"></div>
+      <a href="https://apps.apple.com/developer/michel-garlandat/id368771203"
+         class="appstore-badge" target="_blank" style="display:block;text-align:center;margin-top:16px">
+        <img src="https://developer.apple.com/app-store/marketing/guidelines/images/badge-download-on-the-app-store.svg"
+             alt="App Store" style="height:36px">
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CURRENCIES ──────────────────────────────────────────────────────────────
+const CURRENCIES = {
+  EUR:{name:"Euro",symbol:"€"},
+  USD:{name:"Dollar américain",symbol:"$"},
+  GBP:{name:"Livre sterling",symbol:"£"},
+  JPY:{name:"Yen japonais",symbol:"¥"},
+  CHF:{name:"Franc suisse",symbol:"Fr"},
+  CAD:{name:"Dollar canadien",symbol:"CA$"},
+  AUD:{name:"Dollar australien",symbol:"AU$"},
+  CNY:{name:"Yuan chinois",symbol:"¥"},
+  SEK:{name:"Couronne suédoise",symbol:"kr"},
+  NOK:{name:"Couronne norvégienne",symbol:"kr"},
+  DKK:{name:"Couronne danoise",symbol:"kr"},
+  MXN:{name:"Peso mexicain",symbol:"$"},
+  BRL:{name:"Real brésilien",symbol:"R$"},
+  INR:{name:"Roupie indienne",symbol:"₹"},
+  KRW:{name:"Won coréen",symbol:"₩"},
+  SGD:{name:"Dollar de Singapour",symbol:"S$"},
+  HKD:{name:"Dollar de Hong Kong",symbol:"HK$"},
+  TRY:{name:"Livre turque",symbol:"₺"},
+  ZAR:{name:"Rand sud-africain",symbol:"R"},
+  MAD:{name:"Dirham marocain",symbol:"د.م."},
+  AED:{name:"Dirham des EAU",symbol:"د.إ"},
+  THB:{name:"Baht thaïlandais",symbol:"฿"},
+  PLN:{name:"Zloty polonais",symbol:"zł"},
+  CZK:{name:"Couronne tchèque",symbol:"Kč"},
+  HUF:{name:"Forint hongrois",symbol:"Ft"},
+};
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let rates = {};
+let rateBase = 'EUR';
+let fromCode = 'EUR';
+let toCode = 'USD';
+let history = JSON.parse(localStorage.getItem('cc_history') || '[]');
+let fs = parseFloat(localStorage.getItem('cc_fs') || '1');
+
+const QUICK_AMOUNTS = [1,5,10,20,50,100,200,500];
+
+// ── APPS ─────────────────────────────────────────────────────────────────────
+const APPS = [
+  {id:'6770566450',name:'Amérique Nord GQ'},{id:'6770458593',name:'Europe GQ'},
+  {id:'6770453028',name:'France GQ'},{id:'6770848617',name:'Moyen Orient GQ'},
+  {id:'6770302783',name:'Architectes'},{id:'6770857576',name:'Asie GQ'},
+  {id:'6770826067',name:'Europe HUE GQ'},{id:'6770836826',name:'Afrique GQ'},
+  {id:'6770580053',name:'Amérique Sud GQ'},{id:'6764087562',name:'Aéroports'},
+  {id:'6763857843',name:'Gratte-Ciels'},{id:'6763569148',name:'Nobels'},
+  {id:'6767273597',name:'Machines Leg.'},{id:'6768320574',name:'Légion Honneur'},
+  {id:'6769310796',name:'App Solitaire'},{id:'6768068634',name:'Peintres'},
+  {id:'6767810270',name:'Îles du Monde'},{id:'6768003416',name:'Explorateurs'},
+  {id:'6767492967',name:'Institutions'},{id:'6767135193',name:'Auteurs BD'},
+  {id:'6766261703',name:'Micro-Info'},{id:'6766260978',name:'Histoire Info'},
+  {id:'6761993002',name:'Comédie Fr.'},{id:'6761769529',name:'Institut Fr.'},
+  {id:'6761335268',name:'Panthéon'},{id:'6761374601',name:'Maréchaux Napoleon'},
+  {id:'6761361079',name:'Assemblée Paris'},{id:'6761363063',name:'Sénat Paris'},
+  {id:'6761324444',name:'Présidents Fr.'},{id:'6761322546',name:'Rois de France'},
+  {id:'6761334922',name:'Académie Fr.'},{id:'6761709149',name:'Basilique St-Denis'},
+  {id:'6761685637',name:'Arbres de France'},{id:'6761656628',name:'Compositeurs'},
+  {id:'6760929391',name:'Théâtres Paris'},{id:'6761293938',name:'Scènes Paris'},
+  {id:'6760890465',name:'Musées Paris'},{id:'6760751055',name:'Cimetières Paris'},
+  {id:'6761421276',name:'Capitales Europe'},{id:'6762098486',name:'Familles Royales'},
+  {id:'6762263227',name:'Leaders Europeens'},{id:'6762346365',name:'Pays UE'},
+  {id:'6762256169',name:'Présidents US'},{id:'6762370541',name:'États-Unis'},
+  {id:'6762208827',name:'Dynasties Royales'},{id:'6762522136',name:'Dynasties Chinoises'},
+  {id:'6762452564',name:'Dynasties Russes'},{id:'6762542395',name:'Conquêtes Sociales'},
+];
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  applyFS();
+  buildSelects();
+  buildQuick();
+  buildApps();
+  fetchRates();
+  renderHistory();
+  document.getElementById('inputFrom').value = '100';
+});
+
+function buildSelects() {
+  const codes = Object.keys(CURRENCIES);
+  ['selFrom','selTo'].forEach(id => {
+    const sel = document.getElementById(id);
+    codes.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      sel.appendChild(opt);
+    });
+  });
+  document.getElementById('selFrom').value = fromCode;
+  document.getElementById('selTo').value = toCode;
+  updateNames();
+}
+
+function buildQuick() {
+  const grid = document.getElementById('quickGrid');
+  grid.innerHTML = '';
+  QUICK_AMOUNTS.forEach(a => {
+    const btn = document.createElement('button');
+    btn.className = 'quick-btn';
+    btn.textContent = a;
+    btn.onclick = () => {
+      document.getElementById('inputFrom').value = a;
+      convertFrom();
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function buildApps() {
+  const grid = document.getElementById('appsGrid');
+  APPS.forEach(app => {
+    const item = document.createElement('div');
+    item.className = 'app-item';
+    item.innerHTML = `<div class="app-icon" id="icon_${app.id}"><div style="width:56px;height:56px;background:var(--surface2);border-radius:13px"></div></div><div class="app-name">${app.name}</div>`;
+    item.onclick = () => window.open('https://apps.apple.com/app/id'+app.id,'_blank');
+    grid.appendChild(item);
+    loadIcon(app.id);
+  });
+}
+
+function loadIcon(numId) {
+  const cbName = 'itcb'+numId;
+  window[cbName] = function(d) {
+    if (d.results && d.results[0]) {
+      const img = document.createElement('img');
+      img.src = d.results[0].artworkUrl60;
+      img.style.cssText = 'width:56px;height:56px;border-radius:13px;object-fit:cover';
+      const el = document.getElementById('icon_'+numId);
+      if (el) { el.innerHTML = ''; el.appendChild(img); }
+    }
+  };
+  const s = document.createElement('script');
+  s.src = 'https://itunes.apple.com/lookup?id='+numId+'&callback='+cbName;
+  document.body.appendChild(s);
+}
+
+// ── RATES ────────────────────────────────────────────────────────────────────
+async function fetchRates() {
+  const dot = document.getElementById('rateDot');
+  const label = document.getElementById('rateLabel');
+  dot.className = 'rate-dot loading';
+  label.textContent = 'Chargement des taux…';
+  try {
+    // API ouverte sans clé, base EUR
+    const res = await fetch('https://open.er-api.com/v6/latest/EUR');
+    const data = await res.json();
+    if (data.result === 'success') {
+      rates = data.rates;
+      rateBase = 'EUR';
+      dot.className = 'rate-dot';
+      const d = new Date(data.time_last_update_utc);
+      label.textContent = 'Mis à jour ' + d.toLocaleDateString('fr-FR', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+      convertFrom();
+      updateRateDisplay();
+    } else { throw new Error('API error'); }
+  } catch(e) {
+    dot.className = 'rate-dot error';
+    label.textContent = 'Taux indisponibles — vérifiez la connexion';
+    document.getElementById('rateValue').textContent = '';
+  }
+}
+
+function getRate(from, to) {
+  if (!rates[from] || !rates[to]) return null;
+  return rates[to] / rates[from];
+}
+
+function updateRateDisplay() {
+  const r = getRate(fromCode, toCode);
+  if (r === null) { document.getElementById('rateValue').textContent = ''; return; }
+  const sym1 = CURRENCIES[fromCode].symbol;
+  const sym2 = CURRENCIES[toCode].symbol;
+  document.getElementById('rateValue').textContent = `1${sym1} = ${formatNum(r, toCode)}${sym2}`;
+}
+
+// ── CONVERSION ───────────────────────────────────────────────────────────────
+function convertFrom() {
+  const val = parseFloat(document.getElementById('inputFrom').value);
+  const r = getRate(fromCode, toCode);
+  if (isNaN(val) || r === null) { document.getElementById('inputTo').value = ''; return; }
+  const result = val * r;
+  document.getElementById('inputTo').value = formatNum(result, toCode);
+  if (!isNaN(val) && val > 0) addHistory(val, result);
+}
+
+function formatNum(n, code) {
+  if (['JPY','KRW','HUF'].includes(code)) return Math.round(n).toLocaleString('fr-FR');
+  return n.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function onCurrencyChange() {
+  fromCode = document.getElementById('selFrom').value;
+  toCode = document.getElementById('selTo').value;
+  updateNames();
+  updateRateDisplay();
+  convertFrom();
+}
+
+function updateNames() {
+  document.getElementById('nameFrom').textContent = CURRENCIES[fromCode]?.name || '';
+  document.getElementById('nameTo').textContent = CURRENCIES[toCode]?.name || '';
+}
+
+function swapCurrencies() {
+  const tmp = fromCode; fromCode = toCode; toCode = tmp;
+  document.getElementById('selFrom').value = fromCode;
+  document.getElementById('selTo').value = toCode;
+  const vFrom = document.getElementById('inputFrom').value;
+  const vTo = document.getElementById('inputTo').value;
+  document.getElementById('inputFrom').value = vTo || vFrom;
+  updateNames();
+  updateRateDisplay();
+  convertFrom();
+}
+
+// ── HISTORY ──────────────────────────────────────────────────────────────────
+function addHistory(from, to) {
+  const entry = {
+    from: formatNum(from, fromCode) + ' ' + fromCode,
+    to: formatNum(to, toCode) + ' ' + toCode,
+    rate: '1 ' + fromCode + ' = ' + formatNum(getRate(fromCode,toCode), toCode) + ' ' + toCode,
+    ts: Date.now()
+  };
+  history = [entry, ...history.filter(h => h.from !== entry.from || h.to !== entry.to)].slice(0,10);
+  localStorage.setItem('cc_history', JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory() {
+  const sec = document.getElementById('historySection');
+  const list = document.getElementById('historyList');
+  if (!history.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  list.innerHTML = history.map(h =>
+    `<div class="history-item">
+      <span class="hi-from">${h.from}</span>
+      <span class="hi-arrow">→</span>
+      <div>
+        <div class="hi-to">${h.to}</div>
+        <div class="hi-rate">${h.rate}</div>
+      </div>
+    </div>`
+  ).join('');
+}
+
+function clearHistory() {
+  history = [];
+  localStorage.setItem('cc_history', '[]');
+  renderHistory();
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────────────────────
+function openSettings() { document.getElementById('settingsOverlay').classList.add('open') }
+function closeSettings() { document.getElementById('settingsOverlay').classList.remove('open') }
+
+function changeFS(delta) {
+  fs = Math.max(0.8, Math.min(1.5, fs + delta));
+  localStorage.setItem('cc_fs', fs);
+  applyFS();
+}
+function applyFS() {
+  document.documentElement.style.setProperty('--fs', fs);
+  document.getElementById('fsPreview').textContent = Math.round(fs*100)+'%';
+}
+</script>
+</body>
+</html>
